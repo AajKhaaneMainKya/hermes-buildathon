@@ -1,8 +1,9 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useReducer, useRef } from 'react'
+import React, { createContext, useContext, useEffect, useReducer, useRef, useState } from 'react'
 import { AppState, CrossZoneFlag, Judge, Mentor, NotifEntry, Participant, Team, TeamStatus, Zone } from '@/lib/types'
-import { defaultState, loadState, saveState } from '@/lib/storage'
+import { defaultState } from '@/lib/storage'
+import { loadRemoteState, saveRemoteState, subscribeToStateChanges } from '@/lib/stateSync'
 
 type Action =
   | { type: 'HYDRATE'; payload: AppState }
@@ -46,7 +47,7 @@ type Action =
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'HYDRATE':
-      return action.payload
+      return { ...action.payload }
     case 'SET_PASSCODES':
       return { ...state, passcodes: { ...state.passcodes, ...action.payload } }
     case 'SET_HERMES_URL':
@@ -235,16 +236,34 @@ const AppContext = createContext<AppContextValue | null>(null)
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, defaultState())
-  const hydrated = useRef(false)
+  const [loading, setLoading] = useState(true)
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    dispatch({ type: 'HYDRATE', payload: loadState() })
-    hydrated.current = true
+    loadRemoteState().then((remoteState) => {
+      dispatch({ type: 'HYDRATE', payload: remoteState })
+      setLoading(false)
+    })
   }, [])
 
   useEffect(() => {
-    if (hydrated.current) saveState(state)
-  }, [state])
+    if (loading) return // don't save the default state before hydration
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => {
+      saveRemoteState(state)
+    }, 600) // debounce — wait 600ms after last dispatch before writing
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+    }
+  }, [state, loading])
+
+  useEffect(() => {
+    if (loading) return
+    const unsubscribe = subscribeToStateChanges((newState) => {
+      dispatch({ type: 'HYDRATE', payload: newState })
+    })
+    return unsubscribe
+  }, [loading])
 
   const notify = async (text: string, type: NotifEntry['type']) => {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -295,6 +314,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     resetEventData: () => dispatch({ type: 'RESET_EVENT_DATA' }),
     fullReset: () => dispatch({ type: 'FULL_RESET' }),
     notify,
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
+        <div className="text-center">
+          <div className="mb-2 text-sm text-zinc-400">Loading event state...</div>
+          <div className="text-xs text-zinc-600">Connecting to Supabase</div>
+        </div>
+      </div>
+    )
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

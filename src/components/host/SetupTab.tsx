@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useApp } from '@/context/AppContext'
-import { defaultState, saveState } from '@/lib/storage'
+import { defaultState } from '@/lib/storage'
+import { saveRemoteState } from '@/lib/stateSync'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -55,8 +56,8 @@ export default function SetupTab() {
     setMentorTelegram('')
   }
 
-  const handleFullReset = () => {
-    saveState(defaultState())
+  const handleFullReset = async () => {
+    await saveRemoteState(defaultState())
     window.location.reload()
   }
 
