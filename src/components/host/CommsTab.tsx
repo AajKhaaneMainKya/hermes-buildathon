@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { useApp } from '@/context/AppContext'
+import { csvFilename, downloadCSV } from '@/lib/exportCSV'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { DownloadButton } from '@/components/shared/DownloadButton'
 import {
   Select,
   SelectContent,
@@ -42,6 +44,15 @@ export default function CommsTab() {
     if (!dmTarget || !dmMsg.trim()) return
     notify(`[DM to ${dmTarget}] ${dmMsg.trim()}`, 'dm')
     setDmMsg('')
+  }
+
+  const downloadNotifLog = () => {
+    const rows = state.notifLog.map((n) => ({
+      Time: n.time,
+      Type: n.type,
+      Message: n.msg,
+    }))
+    downloadCSV(csvFilename(state.eventName, 'notification-log'), rows)
   }
 
   return (
@@ -127,8 +138,13 @@ export default function CommsTab() {
       </Card>
 
       <Card className="border-zinc-700 bg-zinc-900">
-        <CardHeader>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-zinc-100">Notification log</CardTitle>
+          <DownloadButton
+            label="Download notification log CSV"
+            onClick={downloadNotifLog}
+            disabled={state.notifLog.length === 0}
+          />
         </CardHeader>
         <CardContent className="max-h-96 space-y-1.5 overflow-y-auto">
           {state.notifLog.length === 0 && <p className="text-sm text-zinc-500">No notifications yet.</p>}

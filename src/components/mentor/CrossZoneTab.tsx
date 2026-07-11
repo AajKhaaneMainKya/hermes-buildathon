@@ -41,7 +41,9 @@ export default function CrossZoneTab({ mentorName }: { mentorName: string }) {
         <CardContent className="space-y-2">
           <Select value={teamId} onValueChange={(v) => setTeamId((v ?? ""))}>
             <SelectTrigger className="w-full bg-zinc-800">
-              <SelectValue placeholder="Select a team" />
+              <SelectValue placeholder="Select a team">
+                {(v: string) => (v ? otherTeams.find((t) => t.id === v)?.name : 'Select a team')}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {otherTeams.map((t) => (

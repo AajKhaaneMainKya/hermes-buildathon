@@ -50,7 +50,9 @@ export default function MentorScoringTab({ mentorName }: { mentorName: string })
           </div>
           <Select value={crossTeamId} onValueChange={(v) => setCrossTeamId((v ?? ""))}>
             <SelectTrigger className="w-full bg-zinc-800 sm:w-72">
-              <SelectValue placeholder="Select a team" />
+              <SelectValue placeholder="Select a team">
+                {(v: string) => (v ? otherTeams.find((t) => t.id === v)?.name : 'Select a team')}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {otherTeams.map((t) => (

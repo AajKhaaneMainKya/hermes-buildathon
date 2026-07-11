@@ -36,6 +36,29 @@ export default function JudgingTab() {
     return counts
   }, [state.mentorRecommendations])
 
+  const judgeRecommendedTeamIds = useMemo(() => {
+    const ids = new Set<string>()
+    Object.values(state.judgeRecommendations).forEach((teamIds) => teamIds.forEach((id) => ids.add(id)))
+    return Array.from(ids)
+  }, [state.judgeRecommendations])
+
+  const judgeRecommendationCounts = useMemo(() => {
+    const counts: Record<string, string[]> = {}
+    Object.entries(state.judgeRecommendations).forEach(([judgeId, teamIds]) => {
+      const judgeName = state.judges.find((j) => j.id === judgeId)?.name || judgeId
+      teamIds.forEach((id) => {
+        counts[id] = counts[id] || []
+        counts[id].push(judgeName)
+      })
+    })
+    return counts
+  }, [state.judgeRecommendations, state.judges])
+
+  const allRecommendedTeamIds = useMemo(() => {
+    const ids = new Set<string>([...recommendedTeamIds, ...judgeRecommendedTeamIds])
+    return Array.from(ids)
+  }, [recommendedTeamIds, judgeRecommendedTeamIds])
+
   const ranked = useMemo(() => {
     return state.teams
       .map((t) => ({ team: t, result: calcScore(state.hostScores[t.id] || {}, t.track) }))
@@ -85,38 +108,67 @@ export default function JudgingTab() {
       </div>
 
       {state.judgingStep === 1 && (
-        <Card className="border-zinc-700 bg-zinc-900">
-          <CardHeader>
-            <CardTitle className="text-zinc-100">Step 1 — Collect recommendations</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {recommendedTeamIds.length === 0 && (
-              <p className="text-sm text-zinc-500">No mentor recommendations submitted yet.</p>
-            )}
-            {recommendedTeamIds.map((id) => {
-              const team = state.teams.find((t) => t.id === id)
-              if (!team) return null
-              const mentors = recommendationCounts[id] || []
-              return (
-                <div key={id} className="flex items-center justify-between rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2">
-                  <div>
-                    <div className="text-sm font-semibold text-zinc-100">{team.name}</div>
-                    <div className="text-xs text-zinc-500">recommended by {mentors.join(', ')}</div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Card className="border-zinc-700 bg-zinc-900">
+            <CardHeader>
+              <CardTitle className="text-zinc-100">Mentor recommendations</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {recommendedTeamIds.length === 0 && (
+                <p className="text-sm text-zinc-500">No mentor recommendations submitted yet.</p>
+              )}
+              {recommendedTeamIds.map((id) => {
+                const team = state.teams.find((t) => t.id === id)
+                if (!team) return null
+                const mentors = recommendationCounts[id] || []
+                return (
+                  <div key={id} className="flex items-center justify-between rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2">
+                    <div>
+                      <div className="text-sm font-semibold text-zinc-100">{team.name}</div>
+                      <div className="text-xs text-zinc-500">recommended by {mentors.join(', ')}</div>
+                    </div>
+                    <Badge variant="outline" className="border-violet-700 text-violet-300">
+                      {mentors.length}×
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className="border-violet-700 text-violet-300">
-                    {mentors.length}×
-                  </Badge>
-                </div>
-              )
-            })}
-          </CardContent>
-        </Card>
+                )
+              })}
+            </CardContent>
+          </Card>
+
+          <Card className="border-zinc-700 bg-zinc-900">
+            <CardHeader>
+              <CardTitle className="text-zinc-100">Judge recommendations</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {judgeRecommendedTeamIds.length === 0 && (
+                <p className="text-sm text-zinc-500">No judge recommendations submitted yet.</p>
+              )}
+              {judgeRecommendedTeamIds.map((id) => {
+                const team = state.teams.find((t) => t.id === id)
+                if (!team) return null
+                const judges = judgeRecommendationCounts[id] || []
+                return (
+                  <div key={id} className="flex items-center justify-between rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2">
+                    <div>
+                      <div className="text-sm font-semibold text-zinc-100">{team.name}</div>
+                      <div className="text-xs text-zinc-500">recommended by {judges.join(', ')}</div>
+                    </div>
+                    <Badge variant="outline" className="border-amber-600 text-amber-300">
+                      {judges.length}×
+                    </Badge>
+                  </div>
+                )
+              })}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {state.judgingStep === 2 && (
         <div className="space-y-4">
-          {recommendedTeamIds.length === 0 && <p className="text-sm text-zinc-500">No recommended teams to score.</p>}
-          {recommendedTeamIds.map((id) => {
+          {allRecommendedTeamIds.length === 0 && <p className="text-sm text-zinc-500">No recommended teams to score.</p>}
+          {allRecommendedTeamIds.map((id) => {
             const team = state.teams.find((t) => t.id === id)
             if (!team) return null
             return (

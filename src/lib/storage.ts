@@ -10,8 +10,10 @@ export function defaultState(): AppState {
     eventDate: '',
     startTime: '09:00',
     mentors: [],
+    judges: [],
     zones: [],
     teams: [],
+    participants: [],
     hostScores: {},
     judgeScores: {},
     ideaLockStatus: {},
@@ -19,8 +21,10 @@ export function defaultState(): AppState {
     shortlist: [],
     notifLog: [],
     mentorRecommendations: {},
+    judgeRecommendations: {},
     floorOpen: false,
     judgingStep: 1,
+    rankingBasis: 'judges_avg',
   }
 }
 

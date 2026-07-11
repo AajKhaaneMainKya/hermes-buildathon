@@ -1,6 +1,7 @@
 export type Role = 'host' | 'mentor' | 'judge'
 export type TrackId = 'virality' | 'revenue' | 'agency'
 export type TeamStatus = 'building' | 'locked' | 'scoring' | 'shortlisted' | 'eliminated'
+export type RankingBasis = 'judges_avg' | 'judges_sum' | 'host' | 'mentor' | 'all_avg' | 'all_sum'
 export type NotifType =
   | 'broadcast'
   | 'dm'
@@ -16,6 +17,19 @@ export interface Mentor {
   id: string
   name: string
   telegram: string
+}
+
+export interface Judge {
+  id: string
+  name: string
+  telegram: string
+}
+
+export interface Participant {
+  id: string
+  name: string
+  email: string
+  zone?: string // zoneId, assigned after import
 }
 
 export interface Zone {
@@ -59,15 +73,19 @@ export interface AppState {
   eventDate: string
   startTime: string // 'HH:MM', default '09:00'
   mentors: Mentor[]
+  judges: Judge[]
   zones: Zone[]
   teams: Team[]
+  participants: Participant[]
   hostScores: Record<string, Record<string, number | boolean | string>> // teamId -> scores
-  judgeScores: Record<string, Record<string, number | boolean | string>>
+  judgeScores: Record<string, Record<string, Record<string, number | boolean | string>>> // judgeId -> teamId -> scores
   ideaLockStatus: Record<string, 'pending' | 'yes' | 'no'> // mentorName -> status
   crossZoneFlags: CrossZoneFlag[]
   shortlist: string[] // teamIds (exactly 5 for demo)
   notifLog: NotifEntry[]
   mentorRecommendations: Record<string, string[]> // mentorName -> teamIds (0-3)
+  judgeRecommendations: Record<string, string[]> // judgeId -> teamIds (0-3)
   floorOpen: boolean // true after host opens cross-zone input in judging step 3
   judgingStep: 1 | 2 | 3 | 4
+  rankingBasis: RankingBasis
 }

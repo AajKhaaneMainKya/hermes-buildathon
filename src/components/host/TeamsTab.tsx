@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { useApp } from '@/context/AppContext'
 import { TrackId, TeamStatus } from '@/lib/types'
 import { TRACKS } from '@/lib/tracks'
+import { csvFilename, downloadCSV } from '@/lib/exportCSV'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { DownloadButton } from '@/components/shared/DownloadButton'
 import {
   Select,
   SelectContent,
@@ -65,6 +67,23 @@ export default function TeamsTab() {
     notify('Idea lock check: message all mentors — confirm every team has locked their idea, or flag an issue.', 'idea_lock')
   }
 
+  const downloadTeams = () => {
+    const rows = state.teams.map((t) => {
+      const zone = state.zones.find((z) => z.id === t.zoneId)
+      return {
+        'Team name': t.name,
+        'Project title': t.project,
+        Members: t.members,
+        Zone: zone?.name || '',
+        Track: TRACKS[t.track].name,
+        Status: t.status,
+        'Idea locked': t.mentorLock === 'yes' ? 'yes' : 'no',
+        'Mentor notes': t.mentorNotes,
+      }
+    })
+    downloadCSV(csvFilename(state.eventName, 'teams'), rows)
+  }
+
   return (
     <div className="space-y-6">
       <Card className="border-zinc-700 bg-zinc-900">
@@ -80,7 +99,9 @@ export default function TeamsTab() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Select value={zoneId} onValueChange={(v) => setZoneId((v ?? ""))}>
               <SelectTrigger className="w-full bg-zinc-800">
-                <SelectValue placeholder="Zone" />
+                <SelectValue placeholder="Zone">
+                  {(v: string) => (v ? state.zones.find((z) => z.id === v)?.name : 'Zone')}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {state.zones.map((z) => (
@@ -92,7 +113,9 @@ export default function TeamsTab() {
             </Select>
             <Select value={track} onValueChange={(v) => setTrack(v as TrackId)}>
               <SelectTrigger className="w-full bg-zinc-800">
-                <SelectValue placeholder="Track" />
+                <SelectValue placeholder="Track">
+                  {(v: string) => (v ? TRACKS[v]?.name : 'Track')}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {Object.values(TRACKS).map((t) => (
@@ -136,8 +159,9 @@ export default function TeamsTab() {
       </Card>
 
       <Card className="border-zinc-700 bg-zinc-900">
-        <CardHeader>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-zinc-100">Teams ({state.teams.length})</CardTitle>
+          <DownloadButton label="Download teams CSV" onClick={downloadTeams} disabled={state.teams.length === 0} />
         </CardHeader>
         <CardContent className="space-y-2">
           {state.teams.length === 0 && <p className="text-sm text-zinc-500">No teams registered yet.</p>}

@@ -1,5 +1,5 @@
 import { TRACKS, POWERUPS, CROSS_TRACK_BONUS } from './tracks'
-import { TrackId } from './types'
+import { RankingBasis, TrackId } from './types'
 
 export interface ScoreResult {
   base: number
@@ -8,6 +8,10 @@ export interface ScoreResult {
   crossTrack: number
   total: number
   breakdown: Record<string, number>
+}
+
+function emptyResult(): ScoreResult {
+  return { base: 0, overflow: 0, powerup: 0, crossTrack: 0, total: 0, breakdown: {} }
 }
 
 export function calcScore(
@@ -57,6 +61,71 @@ export function calcCrossTrackBonus(
     total += pts
   })
   return { crossTrack: Math.min(total, 50) }
+}
+
+export type AggregationMode = 'avg' | 'sum'
+
+export function aggregateJudgeScores(
+  judgeScores: Record<string, Record<string, Record<string, number | boolean | string>>>,
+  teamId: string,
+  track: TrackId,
+  mode: AggregationMode
+): ScoreResult {
+  const judgeIds = Object.keys(judgeScores).filter(
+    (jid) => Object.keys(judgeScores[jid]?.[teamId] || {}).length > 0
+  )
+  if (!judgeIds.length) return emptyResult()
+
+  if (mode === 'sum') {
+    const totals = judgeIds.map((jid) => calcScore(judgeScores[jid][teamId], track).total)
+    const sum = totals.reduce((a, b) => a + b, 0)
+    return { ...emptyResult(), total: sum }
+  }
+
+  const params = TRACKS[track].params
+  const averaged: Record<string, number | boolean | string> = {}
+  params.forEach((p) => {
+    const levels = judgeIds.map((jid) => Number(judgeScores[jid]?.[teamId]?.[p.id]) || 0).filter((l) => l > 0)
+    averaged[p.id] = levels.length ? Math.round(levels.reduce((a, b) => a + b, 0) / levels.length) : 1
+  })
+  params.forEach((p) => {
+    if (p.overflow) {
+      const overflows = judgeIds.map((jid) => Number(judgeScores[jid]?.[teamId]?.[`${p.id}_overflow`]) || 0)
+      averaged[`${p.id}_overflow`] = Math.round(overflows.reduce((a, b) => a + b, 0) / judgeIds.length)
+    }
+  })
+  return calcScore(averaged, track)
+}
+
+export function computeTeamTotal(
+  teamId: string,
+  track: TrackId,
+  hostScores: Record<string, Record<string, number | boolean | string>>,
+  mentorScores: Record<string, number | boolean | string>,
+  judgeScores: Record<string, Record<string, Record<string, number | boolean | string>>>,
+  basis: RankingBasis
+): number {
+  const hostResult = calcScore(hostScores[teamId] || {}, track)
+  const mentorResult = calcScore(mentorScores || {}, track)
+  const judgeAvgResult = aggregateJudgeScores(judgeScores, teamId, track, 'avg')
+  const judgeSumResult = aggregateJudgeScores(judgeScores, teamId, track, 'sum')
+
+  switch (basis) {
+    case 'judges_avg':
+      return judgeAvgResult.total
+    case 'judges_sum':
+      return judgeSumResult.total
+    case 'host':
+      return hostResult.total
+    case 'mentor':
+      return mentorResult.total
+    case 'all_avg':
+      return Math.round((hostResult.total + mentorResult.total + judgeAvgResult.total) / 3)
+    case 'all_sum':
+      return hostResult.total + mentorResult.total + judgeSumResult.total
+    default:
+      return judgeAvgResult.total
+  }
 }
 
 export interface SpoofWarning {

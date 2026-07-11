@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from 'react'
 import { Role } from '@/lib/types'
+import { SessionProvider, useSession } from '@/context/SessionContext'
 import Login from './Login'
 import HostDashboard from './host/HostDashboard'
 import MentorDashboard from './mentor/MentorDashboard'
@@ -42,9 +43,10 @@ function parseSession(raw: string | null): Session | null {
   }
 }
 
-export default function App() {
+function AppInner() {
   const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
   const session = parseSession(raw)
+  const { setCurrentJudgeId } = useSession()
 
   const handleLogin = (role: Role, mentorName?: string) => {
     const next: Session = { role, mentorName }
@@ -58,6 +60,7 @@ export default function App() {
     try {
       localStorage.removeItem(SESSION_KEY)
     } catch {}
+    setCurrentJudgeId(null)
     emitChange()
   }
 
@@ -66,4 +69,12 @@ export default function App() {
   if (session.role === 'host') return <HostDashboard onLogout={handleLogout} />
   if (session.role === 'mentor') return <MentorDashboard mentorName={session.mentorName || ''} onLogout={handleLogout} />
   return <JudgeDashboard onLogout={handleLogout} />
+}
+
+export default function App() {
+  return (
+    <SessionProvider>
+      <AppInner />
+    </SessionProvider>
+  )
 }

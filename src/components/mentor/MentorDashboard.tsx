@@ -56,7 +56,14 @@ export default function MentorDashboard({ mentorName, onLogout }: { mentorName: 
             <CrossZoneTab mentorName={mentorName} />
           </TabsContent>
           <TabsContent value="leaderboard">
-            <Leaderboard teams={state.teams} scores={state.hostScores} />
+            <Leaderboard
+              teams={state.teams}
+              zones={state.zones}
+              hostScores={state.hostScores}
+              judgeScores={state.judgeScores}
+              basis="judges_avg"
+              eventName={state.eventName}
+            />
           </TabsContent>
         </Tabs>
       </div>

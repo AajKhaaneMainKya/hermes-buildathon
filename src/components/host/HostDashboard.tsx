@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import Timeline from '@/components/shared/Timeline'
 import ZonesTab from './ZonesTab'
 import TeamsTab from './TeamsTab'
+import ParticipantsTab from './ParticipantsTab'
 import CommsTab from './CommsTab'
 import ScoringTab from './ScoringTab'
 import JudgingTab from './JudgingTab'
@@ -16,6 +17,7 @@ import SetupTab from './SetupTab'
 const TABS = [
   { value: 'zones', label: 'Zones' },
   { value: 'teams', label: 'Teams' },
+  { value: 'participants', label: 'Participants' },
   { value: 'comms', label: 'Comms' },
   { value: 'scoring', label: 'Scoring' },
   { value: 'judging', label: 'Judging' },
@@ -54,6 +56,9 @@ export default function HostDashboard({ onLogout }: { onLogout: () => void }) {
           </TabsContent>
           <TabsContent value="teams">
             <TeamsTab />
+          </TabsContent>
+          <TabsContent value="participants">
+            <ParticipantsTab />
           </TabsContent>
           <TabsContent value="comms">
             <CommsTab />

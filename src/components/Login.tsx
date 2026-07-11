@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useApp } from '@/context/AppContext'
+import { useSession } from '@/context/SessionContext'
 import { Role } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,10 +33,13 @@ export default function Login({
   onLogin: (role: Role, mentorName?: string) => void
 }) {
   const { state } = useApp()
+  const { setCurrentJudgeId } = useSession()
   const [role, setRole] = useState<Role>('host')
   const [passcode, setPasscode] = useState('')
   const [mentorName, setMentorName] = useState('')
   const [error, setError] = useState('')
+  const [judgeStep, setJudgeStep] = useState(false)
+  const [selectedJudgeId, setSelectedJudgeId] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,7 +52,65 @@ export default function Login({
       return
     }
     setError('')
+    if (role === 'judge' && state.judges.length > 0) {
+      setJudgeStep(true)
+      return
+    }
     onLogin(role, role === 'mentor' ? mentorName : undefined)
+  }
+
+  const handleJudgeContinue = () => {
+    if (!selectedJudgeId) {
+      setError('Select who you are.')
+      return
+    }
+    setError('')
+    setCurrentJudgeId(selectedJudgeId)
+    onLogin('judge')
+  }
+
+  if (judgeStep) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
+        <Card className="w-full max-w-sm border-zinc-700 bg-zinc-900">
+          <CardHeader>
+            <CardTitle className="text-center text-zinc-100">Which judge are you?</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Select value={selectedJudgeId} onValueChange={(v) => setSelectedJudgeId(v ?? '')}>
+              <SelectTrigger className="w-full bg-zinc-800">
+                <SelectValue placeholder="Select your name">
+                  {(v: string) => (v ? state.judges.find((j) => j.id === v)?.name : 'Select your name')}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {state.judges.map((j) => (
+                  <SelectItem key={j.id} value={j.id}>
+                    {j.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {error && <p className="text-xs text-red-400">{error}</p>}
+
+            <Button className="w-full" onClick={handleJudgeContinue}>
+              Continue
+            </Button>
+            <button
+              type="button"
+              className="w-full text-center text-xs text-zinc-500 hover:text-zinc-300"
+              onClick={() => {
+                setJudgeStep(false)
+                setError('')
+              }}
+            >
+              ← back
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
