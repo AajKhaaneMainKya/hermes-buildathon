@@ -40,6 +40,18 @@ export const TRACKS: Record<string, Track> = {
         overflow: { threshold: 100, per: 100, pts: 2 },
       },
       {
+        id: 'amplification_quality',
+        name: 'Amplification quality',
+        weight: 3,
+        levels: [
+          'None',
+          '1–2 peer reshares',
+          '3+ peer reshares',
+          '1 notable founder/operator reshare (10k+ followers)',
+          'Multiple notables engaging, PH feature, press, or known investor amplification',
+        ],
+      },
+      {
         id: 'visitors',
         name: 'Amplification (visitors)',
         weight: 10,
