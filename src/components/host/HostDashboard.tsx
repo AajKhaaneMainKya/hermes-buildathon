@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import Timeline from '@/components/shared/Timeline'
+import OverviewTab from './OverviewTab'
 import ZonesTab from './ZonesTab'
 import TeamsTab from './TeamsTab'
 import ParticipantsTab from './ParticipantsTab'
@@ -15,6 +16,7 @@ import DemoTab from './DemoTab'
 import SetupTab from './SetupTab'
 
 const TABS = [
+  { value: 'overview', label: 'Overview' },
   { value: 'zones', label: 'Zones' },
   { value: 'teams', label: 'Teams' },
   { value: 'participants', label: 'Participants' },
@@ -27,7 +29,7 @@ const TABS = [
 ]
 
 export default function HostDashboard({ onLogout }: { onLogout: () => void }) {
-  const [tab, setTab] = useState('zones')
+  const [tab, setTab] = useState('overview')
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -51,6 +53,9 @@ export default function HostDashboard({ onLogout }: { onLogout: () => void }) {
               </TabsTrigger>
             ))}
           </TabsList>
+          <TabsContent value="overview">
+            <OverviewTab />
+          </TabsContent>
           <TabsContent value="zones">
             <ZonesTab />
           </TabsContent>
