@@ -41,7 +41,7 @@ export async function saveRemoteState(state: AppState): Promise<void> {
 // Subscribe to real-time state changes from other devices
 // Calls onUpdate whenever another device saves state
 export function subscribeToStateChanges(
-  onUpdate: (newState: AppState) => void
+  onUpdate: (newState: AppState, updatedAt: string) => void
 ): () => void {
   const channel = supabase
     .channel('event_state_changes')
@@ -54,9 +54,9 @@ export function subscribeToStateChanges(
         filter: `event_id=eq.${EVENT_ID}`,
       },
       (payload) => {
-        const incoming = payload.new as { state: AppState }
+        const incoming = payload.new as { state: AppState; updated_at: string }
         if (incoming?.state) {
-          onUpdate({ ...defaultState(), ...incoming.state })
+          onUpdate({ ...defaultState(), ...incoming.state }, incoming.updated_at)
         }
       }
     )

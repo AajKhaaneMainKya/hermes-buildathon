@@ -5,6 +5,7 @@ import { TRACKS } from '@/lib/tracks'
 import { ScoreResult, aggregateJudgeScores, calcScore, computeTeamTotal } from '@/lib/scoring'
 import { csvFilename, downloadCSV } from '@/lib/exportCSV'
 import { DownloadButton } from './DownloadButton'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -130,6 +131,7 @@ export default function Leaderboard({
     const csvRows = rows.map((r, i) => ({
       Rank: i + 1,
       'Team name': r.team.name,
+      Type: r.team.type === 'solo' ? 'Solo' : 'Team',
       Zone: r.zone?.name || '',
       Track: TRACKS[r.team.track].name,
       Members: r.team.members,
@@ -184,6 +186,7 @@ export default function Leaderboard({
               <tr className="border-b border-zinc-800 bg-zinc-900 text-left text-xs text-zinc-500">
                 <th className="px-3 py-2 font-medium">#</th>
                 <th className="px-3 py-2 font-medium">Team</th>
+                <th className="px-3 py-2 font-medium">Type</th>
                 <th className="px-3 py-2 font-medium">Zone</th>
                 <th className="px-3 py-2 font-medium">Track</th>
                 <th className="px-3 py-2 text-right font-medium">Mentor</th>
@@ -202,6 +205,17 @@ export default function Leaderboard({
                   <td className="px-3 py-2">
                     <div className="font-medium text-zinc-100">{r.team.name}</div>
                     <div className="text-xs text-zinc-500">{r.team.project}</div>
+                  </td>
+                  <td className="px-3 py-2">
+                    {r.team.type === 'solo' ? (
+                      <Badge variant="outline" className="border-amber-600 text-amber-300">
+                        Solo
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-zinc-700 text-zinc-400">
+                        Team
+                      </Badge>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-zinc-400">{r.zone?.name || '—'}</td>
                   <td className="px-3 py-2 text-zinc-400">{TRACKS[r.team.track].name}</td>

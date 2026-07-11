@@ -78,13 +78,17 @@ export default function ScoringCard({
   const result = calcScore(scores, team.track)
   const warnings = showSpoofCheck && team.track === 'virality' ? spoofCheck(scores) : []
   const crossEntries = CROSS_TRACK_BONUS.filter((e) => e.sourceTrack !== team.track)
+  const memberCount = team.members.split(',').map((m) => m.trim()).filter(Boolean).length
 
   return (
     <Card className="border-zinc-700 bg-zinc-900">
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div>
           <CardTitle className="text-zinc-100">{team.name}</CardTitle>
-          <p className="text-xs text-zinc-500">{team.project}</p>
+          <p className="text-xs text-zinc-500">
+            {team.type === 'solo' ? 'Solo' : `Team · ${memberCount} member${memberCount !== 1 ? 's' : ''}`}
+          </p>
+          {team.project && <p className="text-xs text-zinc-500">{team.project}</p>}
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-zinc-700 text-zinc-300">

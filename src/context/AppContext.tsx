@@ -47,7 +47,10 @@ type Action =
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'HYDRATE':
-      return { ...action.payload }
+      return {
+        ...action.payload,
+        teams: action.payload.teams.map((t) => ({ ...t, type: t.type || 'team' })),
+      }
     case 'SET_PASSCODES':
       return { ...state, passcodes: { ...state.passcodes, ...action.payload } }
     case 'SET_HERMES_URL':
@@ -238,9 +241,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, defaultState())
   const [loading, setLoading] = useState(true)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastWriteTime = useRef<number>(0)
+  // Set right before any HYDRATE that originates remotely (initial load or realtime).
+  // HYDRATE always returns a new state object, which would otherwise re-arm the save
+  // effect below and cause every client to endlessly re-broadcast whatever it just
+  // received — which in turn keeps lastWriteTime "hot" and breaks the echo filter.
+  const isApplyingRemote = useRef(false)
 
   useEffect(() => {
     loadRemoteState().then((remoteState) => {
+      isApplyingRemote.current = true
       dispatch({ type: 'HYDRATE', payload: remoteState })
       setLoading(false)
     })
@@ -248,9 +258,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (loading) return // don't save the default state before hydration
+    if (isApplyingRemote.current) {
+      isApplyingRemote.current = false
+      return // this state change came from Supabase, not a local edit — don't re-save it
+    }
     if (saveTimer.current) clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => {
-      saveRemoteState(state)
+    saveTimer.current = setTimeout(async () => {
+      lastWriteTime.current = Date.now()
+      await saveRemoteState(state)
     }, 600) // debounce — wait 600ms after last dispatch before writing
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current)
@@ -259,7 +274,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (loading) return
-    const unsubscribe = subscribeToStateChanges((newState) => {
+    const unsubscribe = subscribeToStateChanges((newState, updatedAt) => {
+      const incomingTime = new Date(updatedAt).getTime()
+      if (incomingTime - lastWriteTime.current < 1000) return // our own echo
+      isApplyingRemote.current = true
       dispatch({ type: 'HYDRATE', payload: newState })
     })
     return unsubscribe

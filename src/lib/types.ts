@@ -50,6 +50,7 @@ export interface Team {
   zoneId: string
   track: TrackId
   status: TeamStatus
+  type: 'team' | 'solo' // solo = single participant competing alone
   mentorNotes: string
   mentorScores: Record<string, number | boolean | string>
   mentorLock: 'yes' | 'no' | null

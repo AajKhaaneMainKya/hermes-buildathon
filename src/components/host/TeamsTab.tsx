@@ -35,6 +35,7 @@ const LOCK_STYLES: Record<'pending' | 'yes' | 'no', string> = {
 
 export default function TeamsTab() {
   const { state, addTeam, removeTeam, updateTeamStatus, setIdeaLock, notify } = useApp()
+  const [entryType, setEntryType] = useState<'team' | 'solo'>('team')
   const [name, setName] = useState('')
   const [project, setProject] = useState('')
   const [members, setMembers] = useState('')
@@ -47,10 +48,11 @@ export default function TeamsTab() {
       id: crypto.randomUUID(),
       name: name.trim(),
       project: project.trim(),
-      members: members.trim(),
+      members: entryType === 'solo' ? name.trim() : members.trim(),
       zoneId,
       track,
       status: 'building',
+      type: entryType,
       mentorNotes: '',
       mentorScores: {},
       mentorLock: null,
@@ -72,6 +74,7 @@ export default function TeamsTab() {
       const zone = state.zones.find((z) => z.id === t.zoneId)
       return {
         'Team name': t.name,
+        Type: t.type === 'solo' ? 'Solo' : 'Team',
         'Project title': t.project,
         Members: t.members,
         Zone: zone?.name || '',
@@ -91,11 +94,46 @@ export default function TeamsTab() {
           <CardTitle className="text-zinc-100">Register a team</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Input className="bg-zinc-800" placeholder="Team name" value={name} onChange={(e) => setName(e.target.value)} />
-            <Input className="bg-zinc-800" placeholder="Project name" value={project} onChange={(e) => setProject(e.target.value)} />
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-500">Competing as:</span>
+            <div className="flex gap-1.5">
+              <Button
+                type="button"
+                size="sm"
+                variant={entryType === 'team' ? 'default' : 'outline'}
+                onClick={() => setEntryType('team')}
+              >
+                Team
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={entryType === 'solo' ? 'default' : 'outline'}
+                onClick={() => setEntryType('solo')}
+              >
+                Solo
+              </Button>
+            </div>
           </div>
-          <Input className="bg-zinc-800" placeholder="Members (comma separated)" value={members} onChange={(e) => setMembers(e.target.value)} />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input
+              className="bg-zinc-800"
+              placeholder={entryType === 'solo' ? 'Participant name' : 'Team name'}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <Input
+              className="bg-zinc-800"
+              placeholder={entryType === 'solo' ? 'Idea title (optional)' : 'Project name'}
+              value={project}
+              onChange={(e) => setProject(e.target.value)}
+            />
+          </div>
+          {entryType === 'solo' ? (
+            <Input className="bg-zinc-800 text-zinc-500" placeholder="Name" value={name} disabled />
+          ) : (
+            <Input className="bg-zinc-800" placeholder="Members (comma separated)" value={members} onChange={(e) => setMembers(e.target.value)} />
+          )}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Select value={zoneId} onValueChange={(v) => setZoneId((v ?? ""))}>
               <SelectTrigger className="w-full bg-zinc-800">
@@ -126,7 +164,7 @@ export default function TeamsTab() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleAdd}>Register team</Button>
+          <Button onClick={handleAdd}>{entryType === 'solo' ? 'Register participant' : 'Register team'}</Button>
         </CardContent>
       </Card>
 
@@ -167,15 +205,22 @@ export default function TeamsTab() {
           {state.teams.length === 0 && <p className="text-sm text-zinc-500">No teams registered yet.</p>}
           {state.teams.map((t) => {
             const zone = state.zones.find((z) => z.id === t.zoneId)
+            const memberCount = t.members.split(',').map((m) => m.trim()).filter(Boolean).length
             return (
               <div key={t.id}>
                 <div className="flex flex-wrap items-center justify-between gap-2 py-2">
                   <div>
-                    <div className="text-sm font-semibold text-zinc-100">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-zinc-100">
                       {t.name} <span className="font-normal text-zinc-500">— {t.project}</span>
+                      {t.type === 'solo' && (
+                        <Badge variant="outline" className="border-amber-600 text-amber-300">
+                          Solo
+                        </Badge>
+                      )}
                     </div>
                     <div className="text-xs text-zinc-500">
-                      {zone?.name || 'No zone'} · {TRACKS[t.track].name} · {t.members}
+                      {zone?.name || 'No zone'} · {TRACKS[t.track].name}
+                      {t.type === 'team' && ` · ${memberCount} member${memberCount !== 1 ? 's' : ''}`}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
