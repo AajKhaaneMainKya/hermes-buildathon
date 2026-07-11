@@ -152,7 +152,9 @@ export default function ScoringCard({
                 {p.overflow && level === 5 && (
                   <div className="flex items-center gap-2 pt-1">
                     <label className="text-xs text-zinc-500">
-                      Overflow (raw count beyond {p.overflow.threshold}):
+                      {p.id === 'working_product'
+                        ? 'Additional autonomous tasks completed during judging:'
+                        : `Overflow (raw count beyond ${p.overflow.threshold}):`}
                     </label>
                     <Input
                       type="number"

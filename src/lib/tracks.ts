@@ -37,7 +37,7 @@ export const TRACKS: Record<string, Track> = {
         name: 'Reactions & comments',
         weight: 2,
         levels: ['Under 3', '3–10', '11–25', '26–50', '51–100'],
-        overflow: { threshold: 100, per: 100, pts: 2 },
+        overflow: { threshold: 100, per: 10, pts: 2 },
       },
       {
         id: 'amplification_quality',
@@ -176,6 +176,7 @@ export const TRACKS: Record<string, Track> = {
           '70–85% on real surfaces',
           '85%+ over 3+ runs',
         ],
+        overflow: { threshold: 1, per: 1, pts: 20 },
       },
       {
         id: 'agentic_org',
