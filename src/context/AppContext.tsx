@@ -14,6 +14,7 @@ type Action =
   | { type: 'ADD_JUDGE'; payload: Judge }
   | { type: 'REMOVE_JUDGE'; payload: string }
   | { type: 'ADD_ZONE'; payload: Zone }
+  | { type: 'UPDATE_ZONE'; payload: Zone }
   | { type: 'REMOVE_ZONE'; payload: string }
   | { type: 'ADD_TEAM'; payload: Team }
   | { type: 'REMOVE_TEAM'; payload: string }
@@ -62,6 +63,8 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, judges: state.judges.filter((j) => j.id !== action.payload) }
     case 'ADD_ZONE':
       return { ...state, zones: [...state.zones, action.payload] }
+    case 'UPDATE_ZONE':
+      return { ...state, zones: state.zones.map((z) => (z.id === action.payload.id ? action.payload : z)) }
     case 'REMOVE_ZONE':
       return { ...state, zones: state.zones.filter((z) => z.id !== action.payload) }
     case 'ADD_TEAM':
@@ -200,6 +203,7 @@ interface AppContextValue {
   addJudge: (judge: Judge) => void
   removeJudge: (id: string) => void
   addZone: (zone: Zone) => void
+  updateZone: (zone: Zone) => void
   removeZone: (id: string) => void
   addTeam: (team: Team) => void
   removeTeam: (id: string) => void
@@ -260,6 +264,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addJudge: (judge) => dispatch({ type: 'ADD_JUDGE', payload: judge }),
     removeJudge: (id) => dispatch({ type: 'REMOVE_JUDGE', payload: id }),
     addZone: (zone) => dispatch({ type: 'ADD_ZONE', payload: zone }),
+    updateZone: (zone) => dispatch({ type: 'UPDATE_ZONE', payload: zone }),
     removeZone: (id) => dispatch({ type: 'REMOVE_ZONE', payload: id }),
     addTeam: (team) => dispatch({ type: 'ADD_TEAM', payload: team }),
     removeTeam: (id) => dispatch({ type: 'REMOVE_TEAM', payload: id }),

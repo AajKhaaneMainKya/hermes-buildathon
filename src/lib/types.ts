@@ -32,11 +32,14 @@ export interface Participant {
   zone?: string // zoneId, assigned after import
 }
 
+export type ZoneColor = 'violet' | 'emerald' | 'amber' | 'blue' | 'rose' | 'cyan'
+
 export interface Zone {
   id: string
   name: string
-  mentorName: string // display name, matches Mentor.name
-  maxBuilders: number
+  mentorName: string // display name, matches Mentor.name; '' = unassigned
+  maxBuilders?: number
+  color?: ZoneColor
 }
 
 export interface Team {

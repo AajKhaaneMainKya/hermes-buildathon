@@ -98,12 +98,31 @@ export default function SetupTab() {
           </div>
           <div className="space-y-1">
             <label className="text-xs text-zinc-500">Start time</label>
-            <Input
-              type="time"
-              className="bg-zinc-800"
-              value={state.startTime}
-              onChange={(e) => setEventSettings({ startTime: e.target.value })}
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="time"
+                className="bg-zinc-800"
+                value={state.startTime}
+                onChange={(e) => setEventSettings({ startTime: e.target.value })}
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  setEventSettings({
+                    startTime: `${new Date().getHours().toString().padStart(2, '0')}:${new Date()
+                      .getMinutes()
+                      .toString()
+                      .padStart(2, '0')}`,
+                  })
+                }
+                className="shrink-0 text-xs whitespace-nowrap text-violet-400 underline hover:text-violet-300"
+              >
+                Sync to now
+              </button>
+            </div>
+            <p className="text-xs text-zinc-500">
+              If the event runs late, update this field and all checkpoints will shift automatically.
+            </p>
           </div>
         </CardContent>
       </Card>
