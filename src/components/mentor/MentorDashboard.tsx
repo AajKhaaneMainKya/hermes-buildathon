@@ -7,11 +7,13 @@ import Timeline from '@/components/shared/Timeline'
 import Leaderboard from '@/components/shared/Leaderboard'
 import { useApp } from '@/context/AppContext'
 import MyZoneTab from './MyZoneTab'
+import MentorRegisterTab from './MentorRegisterTab'
 import MentorScoringTab from './MentorScoringTab'
 import CrossZoneTab from './CrossZoneTab'
 
 const TABS = [
   { value: 'zone', label: 'My Zone' },
+  { value: 'register', label: 'Register' },
   { value: 'score', label: 'Score Zone' },
   { value: 'crosszone', label: 'Cross-zone flags' },
   { value: 'leaderboard', label: 'Leaderboard' },
@@ -48,6 +50,9 @@ export default function MentorDashboard({ mentorName, onLogout }: { mentorName: 
           </TabsList>
           <TabsContent value="zone">
             <MyZoneTab mentorName={mentorName} />
+          </TabsContent>
+          <TabsContent value="register">
+            <MentorRegisterTab mentorName={mentorName} />
           </TabsContent>
           <TabsContent value="score">
             <MentorScoringTab mentorName={mentorName} />
