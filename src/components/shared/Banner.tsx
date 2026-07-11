@@ -1,3 +1,7 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+
 export type BannerType = 'info' | 'warning' | 'critical' | 'success'
 
 const STYLES: Record<BannerType, string> = {
@@ -7,25 +11,26 @@ const STYLES: Record<BannerType, string> = {
   success: 'bg-emerald-950 border-emerald-700 text-emerald-300',
 }
 
-export default function Banner({
-  type,
-  message,
-  onDismiss,
-}: {
-  type: BannerType
-  message: string
-  onDismiss?: () => void
-}) {
+export default function Banner({ type, message }: { type: BannerType; message: string }) {
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    if (!visible) return
+    if (type === 'critical' || type === 'success') return // no auto-dismiss — host must dismiss manually
+    const id = setTimeout(() => setVisible(false), 15000)
+    return () => clearTimeout(id)
+  }, [visible, type])
+
+  if (!visible) return null
+
   return (
     <div
       className={`flex items-center justify-between gap-3 rounded-md border px-4 py-2.5 text-sm font-medium ${STYLES[type]}`}
     >
       <span>{message}</span>
-      {onDismiss && (
-        <button onClick={onDismiss} className="shrink-0 text-xs opacity-70 hover:opacity-100">
-          Dismiss
-        </button>
-      )}
+      <button onClick={() => setVisible(false)} className="shrink-0 text-xs opacity-70 hover:opacity-100">
+        ×
+      </button>
     </div>
   )
 }

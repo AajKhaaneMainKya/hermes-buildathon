@@ -77,7 +77,8 @@ export const CHECKPOINTS: Checkpoint[] = [
     label: 'Judging',
     shortLabel: 'Judge',
     type: 'critical',
-    bannerMessage: '4:30pm — Final judgment begins. Score live, mentor by mentor. Leaderboard is now visible to everyone.',
+    bannerMessage:
+      '4:30pm — Final judgment begins. Score live, mentor by mentor. Leaderboard is now visible to all roles — mentors and judges can see live rankings.',
   },
   {
     minutesFromStart: 480,
@@ -95,19 +96,70 @@ export const CHECKPOINTS: Checkpoint[] = [
   },
 ]
 
-export function getEventMinutes(startTime: string): number {
+export function getEventMinutes(startTime: string, eventDate: string): number {
   const now = new Date()
+
+  // If an event date is configured, check it matches today
+  if (eventDate) {
+    const today = now.toISOString().split('T')[0] // 'YYYY-MM-DD'
+    if (today !== eventDate) return -1 // not today — return sentinel
+  }
+
   const [h, m] = startTime.split(':').map(Number)
   const start = new Date(now)
   start.setHours(h, m, 0, 0)
   return Math.floor((now.getTime() - start.getTime()) / 60000)
 }
 
+export function getElapsedLabel(minutes: number, startTime: string, eventDate: string): string {
+  if (!eventDate) {
+    // No date set — just show elapsed from startTime today
+    if (minutes < 0) {
+      const abs = Math.abs(minutes)
+      const h = Math.floor(abs / 60)
+      const m = abs % 60
+      return h > 0 ? `Starts in ${h}h ${m}m` : `Starts in ${m}m`
+    }
+    if (minutes >= 510) return 'Event ended'
+    const h = Math.floor(minutes / 60)
+    const m = minutes % 60
+    return h > 0 ? `${h}h ${m}m elapsed` : `${m}m elapsed`
+  }
+
+  const now = new Date()
+  const today = now.toISOString().split('T')[0]
+
+  // Event date is in the future
+  if (eventDate > today) {
+    const eventMs = new Date(eventDate + 'T' + startTime + ':00').getTime()
+    const diffMs = eventMs - now.getTime()
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+    return `Starts in ${diffDays} day${diffDays !== 1 ? 's' : ''}`
+  }
+
+  // Event date was in the past
+  if (eventDate < today) return 'Event ended'
+
+  // Event date is today
+  if (minutes < 0) {
+    const abs = Math.abs(minutes)
+    const h = Math.floor(abs / 60)
+    const m = abs % 60
+    return h > 0 ? `Starts in ${h}h ${m}m` : `Starts in ${m}m`
+  }
+  if (minutes >= 510) return 'Event ended'
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return h > 0 ? `${h}h ${m}m elapsed` : `${m}m elapsed`
+}
+
 export function getCurrentCheckpoint(minutes: number): Checkpoint | null {
+  if (minutes < 0) return null
   return [...CHECKPOINTS].reverse().find((c) => minutes >= c.minutesFromStart) || null
 }
 
 export function getProgress(minutes: number): number {
+  if (minutes < 0) return 0
   const total = 510
   return Math.min(100, Math.max(0, Math.round((minutes / total) * 100)))
 }

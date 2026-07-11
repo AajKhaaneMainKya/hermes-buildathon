@@ -77,12 +77,24 @@ export default function SetupTab() {
           </div>
           <div className="space-y-1">
             <label className="text-xs text-zinc-500">Event date</label>
-            <Input
-              type="date"
-              className="bg-zinc-800"
-              value={state.eventDate}
-              onChange={(e) => setEventSettings({ eventDate: e.target.value })}
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                className="bg-zinc-800"
+                value={state.eventDate}
+                onChange={(e) => setEventSettings({ eventDate: e.target.value })}
+              />
+              <button
+                type="button"
+                onClick={() => setEventSettings({ eventDate: new Date().toISOString().split('T')[0] })}
+                className="shrink-0 text-xs whitespace-nowrap text-violet-400 underline hover:text-violet-300"
+              >
+                Set to today
+              </button>
+            </div>
+            <p className="text-xs text-zinc-500">
+              Set this to today&apos;s date on event day. The timeline will not activate until the date matches.
+            </p>
           </div>
           <div className="space-y-1">
             <label className="text-xs text-zinc-500">Start time</label>
